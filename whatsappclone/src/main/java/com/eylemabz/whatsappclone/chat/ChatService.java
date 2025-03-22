@@ -4,7 +4,7 @@ import com.eylemabz.whatsappclone.user.User;
 import com.eylemabz.whatsappclone.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +20,7 @@ public class ChatService {
 
     @Transactional(readOnly = true)
     public List<ChatResponse> getChatsByReceiverId(Authentication currentUser){
-        final String userId = currentUser.name();
+        final String userId = currentUser.getName();
         return chatRepository.findChatBySenderId(userId)
                 .stream()
                 .map(c -> (ChatResponse) mapper.toChatResponse(c,userId))
