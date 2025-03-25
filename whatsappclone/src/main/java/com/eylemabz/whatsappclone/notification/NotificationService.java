@@ -13,7 +13,7 @@ public class NotificationService {
     private final SimpMessagingTemplate messageTemplate;
 
     public void sendNotification(String userId, Notification notification){
-        log.info("Sending WS notification to {0 with payload {}",userId,notification);
+        log.info("Sending WS notification to {} with payload {}",userId,notification);
         messageTemplate.convertAndSendToUser(
                 userId,
                 "/chat",
