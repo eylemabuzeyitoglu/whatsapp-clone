@@ -30,5 +30,6 @@ public class UserSynchronizerFilter  extends OncePerRequestFilter {
 
             userSynchronizer.synchronizerWithIdp(token.getToken());
         }
+        filterChain.doFilter(request,response);
     }
 }

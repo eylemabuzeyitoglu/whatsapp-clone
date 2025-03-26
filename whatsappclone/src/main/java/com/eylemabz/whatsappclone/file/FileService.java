@@ -1,7 +1,6 @@
 package com.eylemabz.whatsappclone.file;
 
-import jakarta.validation.Path;
-import jakarta.validation.constraints.NotNull;
+import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static java.io.File.separator;
@@ -21,65 +21,52 @@ import static java.lang.System.currentTimeMillis;
 @RequiredArgsConstructor
 public class FileService {
 
-    @Value("${application.file.upload.media-output-path}")
+    @Value("${application.file.uploads.media-output-path}")
     private String fileUploadPath;
 
     public String saveFile(
-             @NotNull MultipartFile sourceFile,
-             @NotNull String userId) {
+            @Nonnull MultipartFile sourceFile,
+            @Nonnull String userId
+    ) {
         final String fileUploadSubPath = "users" + separator + userId;
-        return uploadFile(sourceFile ,fileUploadSubPath);
+        return uploadFile(sourceFile, fileUploadSubPath);
     }
 
     private String uploadFile(
-            @NotNull MultipartFile sourceFile,
-            @NotNull String fileUploadSubPath) {
+            @Nonnull MultipartFile sourceFile,
+            @Nonnull String fileUploadSubPath
+    ) {
         final String finalUploadPath = fileUploadPath + separator + fileUploadSubPath;
         File targetFolder = new File(finalUploadPath);
 
-        if(!targetFolder.exists()){
-            boolean folderCreated =  targetFolder.mkdirs();
-            if(!folderCreated){
-                log.warn("Failed to created the target folder, {}",targetFolder);
+        if (!targetFolder.exists()) {
+            boolean folderCreated = targetFolder.mkdirs();
+            if (!folderCreated) {
+                log.warn("Failed to create the target folder: " + targetFolder);
                 return null;
             }
         }
         final String fileExtension = getFileExtension(sourceFile.getOriginalFilename());
-        String targetFilePath = finalUploadPath + separator + currentTimeMillis() +  fileExtension;
-        Path targetPath = (Path) Paths.get(targetFilePath);
-        try{
-            Files.write((java.nio.file.Path) targetPath,sourceFile.getBytes());
-            log.info("File saved to {}", targetPath);
+        String targetFilePath = finalUploadPath + separator + currentTimeMillis() + "." + fileExtension;
+        Path targetPath = Paths.get(targetFilePath);
+        try {
+            Files.write(targetPath, sourceFile.getBytes());
+            log.info("File saved to: " + targetFilePath);
             return targetFilePath;
-        }catch (IOException e){
-            log.error("Fİle was not saved",e);
+        } catch (IOException e) {
+            log.error("File was not saved", e);
         }
         return null;
     }
 
-    private String getFileExtension(String filename) {
-        if(filename ==  null || filename.isEmpty()){
+    private String getFileExtension(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
             return "";
         }
-        int lastDotIndex = filename.lastIndexOf(".");
-        if(lastDotIndex == -1){
+        int lastDotIndex = fileName.lastIndexOf(".");
+        if (lastDotIndex == -1) {
             return "";
         }
-        return filename.substring(lastDotIndex + 1).toLowerCase();
+        return fileName.substring(lastDotIndex + 1).toLowerCase();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
