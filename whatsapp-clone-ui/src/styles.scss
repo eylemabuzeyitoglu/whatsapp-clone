@@ -1,12 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
+@use '@ctrl/ngx-emoji-mart/picker';
 @import "bootstrap/dist/css/bootstrap.min.css";
 @import "@fortawesome/fontawesome-free/css/all.min.css";
-@import "@ctrl/ngx-emoji-mart/picker";
+
+
 
 * {
-   margin: 0;
-   padding: 0;
-   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  /*font-family: 'Poppins', sans-serif;*/
 }
 
 body {
@@ -14,10 +17,10 @@ body {
 }
 
 .gray-bg {
-   background-color: #f0f2f5;
+  background-color: #f0f2f5;
 }
 
-.cursor-pointer{
+.cursor-pointer {
   cursor: pointer;
 }
 
@@ -30,4 +33,3 @@ body {
     width: 100%;
   }
 }
-

@@ -25,7 +25,7 @@ import static jakarta.persistence.GenerationType.UUID;
 @NamedQuery(name = ChatConstants.FIND_CHAT_BY_SENDER_ID,
         query = "SELECT DISTINCT c FROM Chat c WHERE c.sender.id = :senderId OR  c.recipient.id = :senderId ORDER BY createdDate DESC")
 @NamedQuery(name = ChatConstants.FIND_CHAT_BY_SENDER_ID_AND_RECEIVER_ID,
-        query = "SELECT DISTINCT c FROM Chat c WHERE (c.sender.id = :senderId ANd c.recipient.id = :recipientId) OR (c.sender.id = :recipientId AND c.recipient.id = :sender)")
+        query = "SELECT DISTINCT c FROM Chat c WHERE (c.sender.id = :senderId ANd c.recipient.id = :recipientId) OR (c.sender.id = :recipientId AND c.recipient.id = :senderIdr)")
 public class Chat extends BaseAuditingEntity {
 
     @Id
@@ -79,6 +79,14 @@ public class Chat extends BaseAuditingEntity {
             return messages.get(0).getCreatedDate();
         }
         return null;
+    }
+
+    @Transient
+    public String getTargetChatName(String senderId) {
+        if (sender.getId().equals(senderId)) {
+            return sender.getFirstName() + " " + sender.getLastName();
+        }
+        return recipient.getFirstName() + " " + recipient.getLastName();
     }
 }
 

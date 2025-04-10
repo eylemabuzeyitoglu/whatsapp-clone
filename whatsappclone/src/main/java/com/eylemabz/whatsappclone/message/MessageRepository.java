@@ -10,12 +10,12 @@ import java.util.List;
 
 @Repository
 
-public interface MessageRepository extends JpaRepository<Message,Long> {
+public interface MessageRepository extends JpaRepository<Message, Long> {
 
     @Query(name = MessagesConstant.FIND_MESSAGES_BY_CHAT_ID)
-    List<Message> findMessagesByChatId(String chatId);
+    List<Message> findMessagesByChatId(@Param("chatId") String chatId);
 
     @Query(name = MessagesConstant.SET_MESSAGES_TO_SEEN_BY_CHAT)
     @Modifying
-    void setMessagesToSeenByChatId(@Param("chatId") String chatId,@Param("newState") MessageState state);
+    void setMessagesToSeenByChatId(@Param("chatId") String chatId, @Param("newState") MessageState state);
 }

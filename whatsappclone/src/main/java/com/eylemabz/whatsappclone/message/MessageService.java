@@ -23,11 +23,10 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ChatRepository chatRepository;
     private final MessageMapper mapper;
-    private final FileService fileService;
     private final NotificationService notificationService;
+    private final FileService fileService;
 
-    public void saveMessage(MessageRequest messageRequest){
-
+    public void saveMessage(MessageRequest messageRequest) {
         Chat chat = chatRepository.findById(messageRequest.getChatId())
                 .orElseThrow(() -> new EntityNotFoundException("Chat not found"));
 
@@ -48,119 +47,77 @@ public class MessageService {
                 .senderId(messageRequest.getSenderId())
                 .receiverId(messageRequest.getReceiverId())
                 .type(NotificationType.MESSAGE)
-                .chatName(chat.getChatName(message.getSenderId()))
+                .chatName(chat.getTargetChatName(message.getSenderId()))
                 .build();
 
-        notificationService.sendNotification(message.getReceiverId(),notification);
+        notificationService.sendNotification(messageRequest.getReceiverId(), notification);
     }
 
-    public List<MessageResponse> findChatMessages(String chatId){
+    public List<MessageResponse> findChatMessages(String chatId) {
         return messageRepository.findMessagesByChatId(chatId)
                 .stream()
-                .map(mapper :: toMessageResponse)
+                .map(mapper::toMessageResponse)
                 .toList();
     }
 
     @Transactional
-    public void setMessagesToSeen(String chatId, Authentication authentication){
+    public void setMessagesToSeen(String chatId, Authentication authentication) {
         Chat chat = chatRepository.findById(chatId)
-                .orElseThrow(() -> new EntityNotFoundException("Chat not found"));
+                .orElseThrow(() -> new RuntimeException("Chat not found"));
+        final String recipientId = getRecipientId(chat, authentication);
 
-        final String recipientId = getRecipientId(chat,authentication);
-
-        messageRepository.setMessagesToSeenByChatId(chatId,MessageState.SEEN);
+        messageRepository.setMessagesToSeenByChatId(chatId, MessageState.SEEN);
 
         Notification notification = Notification.builder()
                 .chatId(chat.getId())
                 .type(NotificationType.SEEN)
                 .receiverId(recipientId)
-                .senderId(getSenderId(chat,authentication))
+                .senderId(getSenderId(chat, authentication))
                 .build();
 
-        notificationService.sendNotification(recipientId,notification);
+        notificationService.sendNotification(recipientId, notification);
     }
 
-    public void uploadMediaMessage(String chatId, MultipartFile file,Authentication authentication){
+    public void uploadMediaMessage(String chatId, MultipartFile file, Authentication authentication) {
         Chat chat = chatRepository.findById(chatId)
-                .orElseThrow(() -> new EntityNotFoundException("Chat was not found"));
+                .orElseThrow(() -> new RuntimeException("Chat not found"));
 
-        final String senderId = getSenderId(chat,authentication);
-        final String recipientId = getRecipientId(chat,authentication);
+        final String senderId = getSenderId(chat, authentication);
+        final String receiverId = getRecipientId(chat, authentication);
 
-        final String filePath = fileService.saveFile(file,senderId);
+        final String filePath = fileService.saveFile(file, senderId);
         Message message = new Message();
-        message.setChat(chat);
+        message.setReceiverId(receiverId);
         message.setSenderId(senderId);
-        message.setReceiverId(recipientId);
-        message.setType(MessageType.IMAGE);
         message.setState(MessageState.SENT);
+        message.setType(MessageType.IMAGE);
         message.setMediaFilePath(filePath);
+        message.setChat(chat);
         messageRepository.save(message);
 
         Notification notification = Notification.builder()
                 .chatId(chat.getId())
                 .type(NotificationType.IMAGE)
-                .messageType(MessageType.IMAGE)
                 .senderId(senderId)
-                .receiverId(recipientId)
+                .receiverId(receiverId)
+                .messageType(MessageType.IMAGE)
                 .media(FileUtils.readFileFromLocation(filePath))
                 .build();
 
-        notificationService.sendNotification(recipientId,notification);
-
+        notificationService.sendNotification(receiverId, notification);
     }
 
     private String getSenderId(Chat chat, Authentication authentication) {
-        if(chat.getSender().getId().equals(authentication.getName())){
+        if (chat.getSender().getId().equals(authentication.getName())) {
             return chat.getSender().getId();
         }
         return chat.getRecipient().getId();
     }
 
     private String getRecipientId(Chat chat, Authentication authentication) {
-        if(chat.getSender().equals(authentication.getName())){
+        if (chat.getSender().getId().equals(authentication.getName())) {
             return chat.getRecipient().getId();
         }
         return chat.getSender().getId();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

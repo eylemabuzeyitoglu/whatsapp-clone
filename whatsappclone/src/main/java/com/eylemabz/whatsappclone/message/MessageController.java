@@ -12,33 +12,41 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/v1/messages")
 @RequiredArgsConstructor
-@RequestMapping("/ap/v1/messages")
 @Tag(name = "Message")
 public class MessageController {
 
     private final MessageService messageService;
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void saveMessage(@RequestBody MessageRequest message){
+    public void saveMessage(@RequestBody MessageRequest message) {
         messageService.saveMessage(message);
     }
 
-    @PostMapping(value = "/upload-media",consumes = "multipart/form-data")
+    @PostMapping(value = "/upload-media", consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.CREATED)
     public void uploadMedia(
             @RequestParam("chat-id") String chatId,
             @Parameter()
-            @RequestParam("file")MultipartFile file,
+            @RequestPart("file") MultipartFile file,
             Authentication authentication
-            ){
-        messageService.uploadMediaMessage(chatId,file,authentication);
+    ) {
+        messageService.uploadMediaMessage(chatId, file, authentication);
+    }
+
+    @PatchMapping
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void setMessageToSeen(@RequestParam("chat-id") String chatId, Authentication authentication) {
+        messageService.setMessagesToSeen(chatId, authentication);
     }
 
     @GetMapping("/chat/{chat-id}")
-    public ResponseEntity<List<MessageResponse>> getMessage(
+    public ResponseEntity<List<MessageResponse>> getAllMessages(
             @PathVariable("chat-id") String chatId
-    ){
+    ) {
+
         return ResponseEntity.ok(messageService.findChatMessages(chatId));
     }
 }

@@ -8,26 +8,25 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { MessageResponse } from '../../models/message-response';
 
-export interface GetMessage$Params {
+export interface SetMessageToSeen$Params {
   'chat-id': string;
 }
 
-export function getMessage(http: HttpClient, rootUrl: string, params: GetMessage$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<MessageResponse>>> {
-  const rb = new RequestBuilder(rootUrl, getMessage.PATH, 'get');
+export function setMessageToSeen(http: HttpClient, rootUrl: string, params: SetMessageToSeen$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+  const rb = new RequestBuilder(rootUrl, setMessageToSeen.PATH, 'patch');
   if (params) {
-    rb.path('chat-id', params['chat-id'], {});
+    rb.query('chat-id', params['chat-id'], {});
   }
 
   return http.request(
-    rb.build({ responseType: 'json', accept: 'application/json', context })
+    rb.build({ responseType: 'text', accept: '*/*', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Array<MessageResponse>>;
+      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
     })
   );
 }
 
-getMessage.PATH = '/ap/v1/messages/chat/{chat-id}';
+setMessageToSeen.PATH = '/api/v1/messages';
